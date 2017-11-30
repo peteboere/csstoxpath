@@ -2,7 +2,21 @@
 
 ## CSS to XPath
 
-Converts CSS selectors to equivalent XPath (see test.js for example usage).
+Converts most CSS 2.1/3 selectors (see exclusions below) to equivalent XPath.
+
+See `test.js` for examples.
+
+
+### Custom pseudo classes
+
+All `:text*` text matching pseudo classes normalize whitespace and ignore tags.
+E.g. `"  my   <i>string</i> "` is treated as `"my string"`.
+
+* `:text("foo")` Case-insensitive matching of element text content
+* `:text-case("foo")` As `:text` but case-sensitive
+* `:text-contains("foo")` Case-insensitive substring matching of element text content
+* `:text-contains-case("foo")` As `:text-contains` but case-sensitive
+* `:childless` As `:empty` but ignoring whitespace
 
 
 ### Unsupported selectors

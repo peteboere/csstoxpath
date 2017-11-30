@@ -13,6 +13,9 @@
   ],
   "author": "Pete Boere <pete@the-echoplex.net> (https://github.com/peteboere)",
   "license": "MIT",
+  "engines": {
+    "node": ">=8"
+  },
   "dependencies": {
     "css-what": "~2.1.0"
   },
