@@ -11,7 +11,7 @@ See `test.js` for examples.
 
 To take advantage of the different capabilities of XPath several custom pseudo classes have been implemented:
 
-### `:text`
+#### `:text`
 
 All text matching pseudo classes normalize whitespace and ignore tags.
 E.g. `"  my   <i>string</i> "` is treated as `"my string"`.
@@ -21,14 +21,14 @@ E.g. `"  my   <i>string</i> "` is treated as `"my string"`.
 * `:text-contains("foo")` Case-insensitive substring matching of element text content
 * `:text-contains-case("foo")` As `:text-contains` but case-sensitive
 
-### `:comment`
+#### `:comment`
 
 * `:comment` Select comment nodes
 * `:comment(n)` Select comment nodes at child position `n`
 
 Note: Can be combined with `:text` to match comment text content. E.g. `p > :comment:text("foo")`
 
-### Other
+#### `:childless`
 
 * `:childless` As `:empty` but ignoring whitespace
 

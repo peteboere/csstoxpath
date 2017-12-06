@@ -140,7 +140,7 @@ const samples = [
     ['a:comment(1):text-case("Foo")', `//a/comment()[1][normalize-space() = "Foo"]`],
     ['a:comment:text-contains("Foo")',
      `//a/comment()[contains(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), "foo")]`],
-    ['a:comment:text-contains-case("Foo")', `//a/comment()[contains(normalize-space(), "Foo")]`],
+    ['a:comment:text-contains-case("Foo")', `//a/comment()[contains(normalize-space(), "Foo")]`]
 ];
 
 let groups = {};
