@@ -45,7 +45,7 @@ function xpathExpression(tokens) {
         let token = tokens[i];
         let previous = (i > 0) ? tokens[i-1] : {};
 
-        if (previous.isNonSiblingAxis && ! token.isTagOrUniversal) {
+        if (previous.isNonSiblingAxis && ! token.isTagOrUniversal && ! token.isPseudoComment) {
             xpath.push('*');
         }
 
@@ -92,14 +92,23 @@ function xpathExpression(tokens) {
                 commitFilters();
                 xpath.push(token.name);
                 break;
-            default:
+            default: {
+                let {data} = token;
                 if (token.isPseudoNot) {
-                    filters.push(`not(${subExpression(token.data, {operator: 'or'})})`);
+                    filters.push(`not(${subExpression(data, {operator: 'or'})})`);
+                }
+                else if (token.isPseudoComment) {
+                    if (! previous.isAxis) {
+                        commitFilters();
+                        xpath.push('/');
+                    }
+                    xpath.push('comment()' + (data ? `[${data}]` : ''));
                 }
                 else {
                     filters.push(...resolveAsFilters(token));
                 }
                 break;
+            }
         }
     }
 
@@ -271,6 +280,7 @@ function decorateToken(token) {
     }
     token.isSiblingAxis = /^(sibling|adjacent)$/.test(type);
     token.isNonSiblingAxis = /^(descendant|child)$/.test(type);
+    token.isAxis = token.isSiblingAxis || token.isNonSiblingAxis;
     token.isTagOrUniversal = /^(tag|universal)$/.test(type);
     return token;
 }

@@ -1,12 +1,12 @@
-/*global describe it*/
+/* global describe it */
 
 const cssToXpath = require('./index');
 const {expect} = require('chai');
 
 const samples = [
     'Simple',
-    ['a', '//a'],
-    ['*', '//*'],
+    ['a', `//a`],
+    ['*', `//*`],
     ['#a', `//*[@id = 'a']`],
     ['.a',
      `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]`
@@ -127,7 +127,20 @@ const samples = [
     'Unions',
     ['a, b', `(//a|//b)`],
     [':first-child, .foo',
-     `(//*[position() = 1]|//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' foo ')])`]
+     `(//*[position() = 1]|//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' foo ')])`],
+
+    'Comments',
+    [':comment', `//comment()`],
+    ['a :comment', `//a//comment()`],
+    ['a > :comment', `//a/comment()`],
+    ['a:comment', `//a/comment()`],
+    ['a:comment(1)', `//a/comment()[1]`],
+    ['a:comment(1):text("Foo")',
+     `//a/comment()[1][translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') = "foo"]`],
+    ['a:comment(1):text-case("Foo")', `//a/comment()[1][normalize-space() = "Foo"]`],
+    ['a:comment:text-contains("Foo")',
+     `//a/comment()[contains(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), "foo")]`],
+    ['a:comment:text-contains-case("Foo")', `//a/comment()[contains(normalize-space(), "Foo")]`],
 ];
 
 let groups = {};
