@@ -39,7 +39,7 @@ Note: Can be combined with `:text` to match based on comment text content. E.g. 
 
 ## Unsupported psuedos
 
-These may be supported at a later date:
+The following may be supported at a later date:
 
 * `:nth-last-child`
 
