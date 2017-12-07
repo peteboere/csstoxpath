@@ -223,15 +223,19 @@ function resolveAsFilters(token) {
             case 'text': // fallthrough
             case 'text-case': // fallthrough
             case 'text-contains': // fallthrough
-            case 'text-contains-case': {
+            case 'text-contains-case': // fallthrough
+            case 'text-start': // fallthrough
+            case 'text-start-case': // fallthrough
+            case 'text-end': // fallthrough
+            case 'text-end-case': {
                 // Normalizing whitespace for all text pseudos.
-                let elementText = 'normalize-space()';
+                let text = 'normalize-space()';
                 let searchText = data.trim();
 
                 // Case insensitive matching.
                 if (! /case/.test(name)) {
                     let abc = 'abcdefghijklmnopqrstuvwxyz';
-                    elementText = `translate(normalize-space(), '${abc.toUpperCase()}', '${abc}')`;
+                    text = `translate(normalize-space(), '${abc.toUpperCase()}', '${abc}')`;
                     searchText = searchText.toLowerCase();
                 }
 
@@ -243,9 +247,15 @@ function resolveAsFilters(token) {
                 }
                 searchText = `${quote}${searchText.replace(/\s+/g, ' ')}${quote}`;
 
-                let textExpr = `${elementText} = ${searchText}`;
+                let textExpr = `${text} = ${searchText}`;
                 if (/contains/.test(name)) {
-                    textExpr = `contains(${elementText}, ${searchText})`;
+                    textExpr = `contains(${text}, ${searchText})`;
+                }
+                else if (/^text-start/.test(name)) {
+                    textExpr = `starts-with(${text}, ${searchText})`;
+                }
+                else if (/^text-end/.test(name)) {
+                    textExpr = `substring(${text}, string-length(${text})-${searchText.length-3}) = ${searchText}`;
                 }
 
                 elements.push(textExpr);

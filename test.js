@@ -124,6 +124,22 @@ const samples = [
     ':text-contains-case (case sensitive)',
     [':text-contains-case("foo  BAR ")', `//*[contains(normalize-space(), "foo BAR")]`],
 
+    ':text-start',
+    [':text-start("foo  bar")',
+     `//*[starts-with(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), "foo bar")]`],
+
+    ':text-start-case (case sensitive)',
+    [':text-start-case("foo  bar")',
+     `//*[starts-with(normalize-space(), "foo bar")]`],
+
+    ':text-end',
+    [':text-end("foo  bar")',
+     `//*[substring(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), string-length(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))-6) = "foo bar"]`],
+
+    ':text-end-case (case sensitive)',
+    [':text-end-case("foo  bar")',
+     `//*[substring(normalize-space(), string-length(normalize-space())-6) = "foo bar"]`],
+
     'Unions',
     ['a, b', `(//a|//b)`],
     [':first-child, .foo',
@@ -195,7 +211,7 @@ describe('Sub expressions', function () {
 
 describe('Unsupported selectors', function () {
     let unsupported = [
-        ':nth-last-child(2)',
+        ':nth-last-child(1)',
         ':nth-of-type',
         ':nth-last-of-type',
         ':last-of-type',
