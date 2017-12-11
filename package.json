@@ -4,7 +4,8 @@
   "description": "CSS to XPath",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha test",
+    "lint": "eslint --fix ."
   },
   "repository": {
     "url": "https://github.com/peteboere/csstoxpath"

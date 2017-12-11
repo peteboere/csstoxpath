@@ -97,6 +97,9 @@ function xpathExpression(tokens) {
                 if (token.isPseudoNot) {
                     filters.push(`not(${subExpression(data, {operator: 'or'})})`);
                 }
+                else if (token.isPseudoAny) {
+                    filters.push(cssToXPath.subExpression(data));
+                }
                 else if (token.isPseudoComment) {
                     if (! previous.isAxis) {
                         commitFilters();
@@ -130,11 +133,13 @@ function subExpression(tokens, options={}) {
 
 function resolveAsFilters(token) {
     let elements = [];
+    let {name, value, action, data} = token;
+
     if (token.isTag) {
-        elements.push(`name() = '${token.name}'`);
+        let {az, AZ} = translateCaseMap(name);
+        elements.push(`translate(name(), '${az}', '${AZ}') = '${name.toUpperCase()}'`);
     }
     else if (token.isAttribute) {
-        let {name, value, action} = token;
         switch (action) {
             case 'exists':
                 elements.push(`@${name}`);
@@ -170,7 +175,6 @@ function resolveAsFilters(token) {
         }
     }
     else if (token.isPseudo) {
-        let {name, data} = token;
         switch (name) {
             case 'empty':
                 elements.push(`not(*) and not(string-length())`);
@@ -183,6 +187,9 @@ function resolveAsFilters(token) {
                 break;
             case 'last-child':
                 elements.push(`position() = last()`);
+                break;
+            case 'not':
+                elements.push(`not(${subExpression(data, {operator: 'or'})})`);
                 break;
             case 'nth-child': {
                 let aliases = {
@@ -234,8 +241,8 @@ function resolveAsFilters(token) {
 
                 // Case insensitive matching.
                 if (! /case/.test(name)) {
-                    let abc = 'abcdefghijklmnopqrstuvwxyz';
-                    text = `translate(normalize-space(), '${abc.toUpperCase()}', '${abc}')`;
+                    let {az, AZ} = translateCaseMap(searchText);
+                    text = az ? `translate(normalize-space(), '${AZ}', '${az}')` : `normalize-space()`;
                     searchText = searchText.toLowerCase();
                 }
 
@@ -293,6 +300,16 @@ function decorateToken(token) {
     token.isAxis = token.isSiblingAxis || token.isNonSiblingAxis;
     token.isTagOrUniversal = /^(tag|universal)$/.test(type);
     return token;
+}
+
+function translateCaseMap(str) {
+    const letters = str
+        .toLowerCase()
+        // ISO/IEC 8859-15 (+ greek) lowercase letters.
+        .replace(/[^a-z\u0161\u017E\u0153\u00E0-\u00FF\u03AC-\u03CE]/g, '')
+        .split('');
+    const az = arrayUnique(letters).join('');
+    return {az, AZ: az.toUpperCase()};
 }
 
 function arrayUnique(arr) {

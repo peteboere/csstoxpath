@@ -27,13 +27,13 @@ const samples = [
 
     'Direct sibling axis',
     ['.a + b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(name() = 'b') and (position() = 1)]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(translate(name(), 'b', 'B') = 'B') and (position() = 1)]`
     ],
     ['.a + .b',
      `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(position() = 1) and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`
     ],
     ['.a + b.b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(name() = 'b') and (position() = 1) and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(translate(name(), 'b', 'B') = 'B') and (position() = 1) and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`
     ],
 
     'Indirect sibling axis',
@@ -104,29 +104,32 @@ const samples = [
 
     ':not',
     [':not(a.b[c]:first-child)',
-     `//*[not((name() = 'a') and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ') and @c and (position() = 1))]`],
+     `//*[not((translate(name(), 'a', 'A') = 'A') and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ') and @c and (position() = 1))]`],
     [':not(:last-child)', `//*[not(position() = last())]`],
     [':not(:nth-child(1n+2))', `//*[not(position() - 2 >= 0)]`],
     ['a :not(.b)', `//a//*[not(@class and contains(concat(' ', normalize-space(@class), ' '), ' b '))]`],
     ['a b:not([c])', `//a//b[not(@c)]`],
 
     ':text',
-    [':text(" Foo Bar ")',
-     `//*[translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') = "foo bar"]`],
+    [':text("CafÉ fØöBÄR")',
+     `//*[translate(normalize-space(), 'CAFÉØÖBÄR', 'caféøöbär') = "café føöbär"]`],
+    [':text("Μεγάλο λιπαρό ελληνικό γάμο")',
+     `//*[translate(normalize-space(), 'ΜΕΓΆΛΟΙΠΑΡΌΗΝΚ', 'μεγάλοιπαρόηνκ') = "μεγάλο λιπαρό ελληνικό γάμο"]`],
+    [':text("עבריתת")', `//*[normalize-space() = "עבריתת"]`],
 
     ':text-case (case sensitive)',
     [':text-case("foo  BAR ")', `//*[normalize-space() = "foo BAR"]`],
 
     ':text-contains',
     [':text-contains("foo  bar ")',
-     `//*[contains(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), "foo bar")]`],
+     `//*[contains(translate(normalize-space(), 'FOBAR', 'fobar'), "foo bar")]`],
 
     ':text-contains-case (case sensitive)',
     [':text-contains-case("foo  BAR ")', `//*[contains(normalize-space(), "foo BAR")]`],
 
     ':text-start',
     [':text-start("foo  bar")',
-     `//*[starts-with(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), "foo bar")]`],
+     `//*[starts-with(translate(normalize-space(), 'FOBAR', 'fobar'), "foo bar")]`],
 
     ':text-start-case (case sensitive)',
     [':text-start-case("foo  bar")',
@@ -134,11 +137,18 @@ const samples = [
 
     ':text-end',
     [':text-end("foo  bar")',
-     `//*[substring(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), string-length(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))-6) = "foo bar"]`],
+     `//*[substring(translate(normalize-space(), 'FOBAR', 'fobar'), string-length(translate(normalize-space(), 'FOBAR', 'fobar'))-6) = "foo bar"]`],
 
     ':text-end-case (case sensitive)',
     [':text-end-case("foo  bar")',
      `//*[substring(normalize-space(), string-length(normalize-space())-6) = "foo bar"]`],
+
+    ':any',
+    [':any(a, b)', `//*[(translate(name(), 'a', 'A') = 'A') or (translate(name(), 'b', 'B') = 'B')]`],
+    ['a :any(first-child[id], c) d',
+     `//a//*[((translate(name(), 'firstchld', 'FIRSTCHLD') = 'FIRST-CHILD') and @id) or (translate(name(), 'c', 'C') = 'C')]//d`],
+    ['a > :any(b.b:not([c]), d.d) > e',
+     `//a/*[((translate(name(), 'b', 'B') = 'B') and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ') and not(@c)) or ((translate(name(), 'd', 'D') = 'D') and @class and contains(concat(' ', normalize-space(@class), ' '), ' d '))]/e`],
 
     'Unions',
     ['a, b', `(//a|//b)`],
@@ -152,10 +162,10 @@ const samples = [
     ['a:comment', `//a/comment()`],
     ['a:comment(1)', `//a/comment()[1]`],
     ['a:comment(1):text("Foo")',
-     `//a/comment()[1][translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') = "foo"]`],
+     `//a/comment()[1][translate(normalize-space(), 'FO', 'fo') = "foo"]`],
     ['a:comment(1):text-case("Foo")', `//a/comment()[1][normalize-space() = "Foo"]`],
     ['a:comment:text-contains("Foo")',
-     `//a/comment()[contains(translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), "foo")]`],
+     `//a/comment()[contains(translate(normalize-space(), 'FO', 'fo'), "foo")]`],
     ['a:comment:text-contains-case("Foo")', `//a/comment()[contains(normalize-space(), "Foo")]`]
 ];
 
@@ -189,11 +199,11 @@ for (let name in groups) {
 
 describe('Sub expressions', function () {
     const samples = [
-        ['a', `name() = 'a'`],
+        ['a', `translate(name(), 'a', 'A') = 'A'`],
         ['.b', `@class and contains(concat(' ', normalize-space(@class), ' '), ' b ')`],
-        ['a.b', `(name() = 'a') and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')`],
-        ['a, b', `(name() = 'a') or (name() = 'b')`],
-        [':text("foo")', `translate(normalize-space(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') = "foo"`]
+        ['a.b', `(translate(name(), 'a', 'A') = 'A') and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')`],
+        ['a, b', `(translate(name(), 'a', 'A') = 'A') or (translate(name(), 'b', 'B') = 'B')`],
+        [':text("foo")', `translate(normalize-space(), 'FO', 'fo') = "foo"`]
     ];
     for (let [css, xpath] of samples) {
         it(`should convert sub-expression '${css}'`, function () {

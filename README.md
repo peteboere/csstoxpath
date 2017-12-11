@@ -25,6 +25,14 @@ E.g. `"  my   <i>string</i> "` is treated as `"my string"`.
 * `:text-end("foo")` Case-insensitive matching of element ending text
 * `:text-end-case("foo")` Case-sensitive `:text-end`
 
+Note: Case-insensitive matching supports character sets within [ISO 8859-15](https://en.wikipedia.org/wiki/ISO/IEC_8859-15#Coverage) and Greek.
+
+#### `:any`
+
+Selectors containing multiple options, any one of which will be matched:
+
+E.g: `div :any(ol, ul, dl) > *` equates to `div ol > *, div ul > *, div dl > *`
+
 #### `:comment`
 
 * `:comment` Select comment nodes
@@ -34,7 +42,7 @@ Note: Can be combined with `:text` to match based on comment text content. E.g. 
 
 #### `:childless`
 
-* `:childless` As `:empty` but ignoring whitespace
+As `:empty` but ignoring whitespace.
 
 
 ## Unsupported psuedos
