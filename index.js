@@ -1,9 +1,8 @@
-const parser = require('css-what');
+const {tokenStream, decorateToken, translateCaseMap,
+    arrayUnique, applyCustomPsuedos} = require('./helpers');
 
-module.exports = cssToXPath;
-
-function cssToXPath(css) {
-    const streams = parser(css);
+const self = module.exports = function cssToXPath(css, {pseudos}={}) {
+    const streams = tokenStream(css, pseudos);
     const expressions = [];
     for (let stream of streams) {
         stream.forEach(token => decorateToken(token));
@@ -18,10 +17,10 @@ function cssToXPath(css) {
         expressions.push(xpathExpression(stream));
     }
     return (expressions.length > 1) ? `(${expressions.join('|')})` : expressions[0];
-}
+};
 
-cssToXPath.subExpression = css => {
-    const streams = parser(css)
+self.subExpression = (css, {pseudos}={}) => {
+    const streams = tokenStream(css, pseudos)
         .map(stream => {
             return stream
                 .map(token => decorateToken(token))
@@ -29,6 +28,8 @@ cssToXPath.subExpression = css => {
         });
     return subExpression(streams, {operator: 'or'});
 };
+
+self.applyCustomPsuedos = applyCustomPsuedos;
 
 function xpathExpression(tokens) {
     let xpath = [];
@@ -98,7 +99,7 @@ function xpathExpression(tokens) {
                     filters.push(`not(${subExpression(data, {operator: 'or'})})`);
                 }
                 else if (token.isPseudoAny) {
-                    filters.push(cssToXPath.subExpression(data));
+                    filters.push(self.subExpression(data));
                 }
                 else if (token.isPseudoComment) {
                     if (! previous.isAxis) {
@@ -286,32 +287,4 @@ function flattenFilters(filters, {operator='and'}={}) {
         return filter;
     }));
     return filters.length ? filters.join(` ${operator} `) : '';
-}
-
-function decorateToken(token) {
-    let {type, name} = token;
-    let titleCase = s => s.replace(/^\w/, m => m.toUpperCase());
-    token[`is${titleCase(type)}`] = true;
-    if (name) {
-        token[`is${titleCase(type)}${name.split(/-/g).map(titleCase).join('')}`] = true;
-    }
-    token.isSiblingAxis = /^(sibling|adjacent)$/.test(type);
-    token.isNonSiblingAxis = /^(descendant|child)$/.test(type);
-    token.isAxis = token.isSiblingAxis || token.isNonSiblingAxis;
-    token.isTagOrUniversal = /^(tag|universal)$/.test(type);
-    return token;
-}
-
-function translateCaseMap(str) {
-    const letters = str
-        .toLowerCase()
-        // ISO/IEC 8859-15 (+ greek) lowercase letters.
-        .replace(/[^a-z\u0161\u017E\u0153\u00E0-\u00FF\u03AC-\u03CE]/g, '')
-        .split('');
-    const az = arrayUnique(letters).join('');
-    return {az, AZ: az.toUpperCase()};
-}
-
-function arrayUnique(arr) {
-    return arr.filter((v, i, a) => a.indexOf(v) === i);
 }

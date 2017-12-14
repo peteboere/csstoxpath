@@ -7,9 +7,9 @@ Converts most CSS 2.1/3 selectors (see exclusions below) to equivalent XPath 1.0
 See `test.js` for examples.
 
 
-## Custom pseudos
+## Extension pseudos
 
-To take advantage of the different capabilities of XPath several custom pseudo selectors have been implemented:
+To take advantage of the different capabilities of XPath some additional pseudo selectors have been implemented:
 
 #### `:text`
 
@@ -42,6 +42,28 @@ Note: Can be combined with `:text` to match based on comment text content. E.g. 
 
 As `:empty` but ignoring whitespace.
 
+
+## Author pseudos
+
+Authored pseudos can serve as aliases to help simplify selector chains:
+
+```js
+/*
+ * If the `pseudos` option is set the CSS expression is
+ * preprocessed before generating the XPath expression.
+ * In this case as follows:
+ *
+ * before  :radio:nth(2)
+ * after   input[type="radio"]:nth-child(2)
+ */
+const cssToXpath = require('csstoxpath');
+const xpathExpr = cssToXpath(':radio:nth(2)', {
+    pseudos: {
+        radio: 'input[type="radio"]',
+        nth: data => `:nth-child(${data})`,
+    }
+});
+```
 
 ## Unsupported psuedos
 

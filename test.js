@@ -238,3 +238,77 @@ describe('Unsupported selectors', function () {
         });
     }
 });
+
+describe('Author pseudo preprocessing', function () {
+    let pseudos = {
+        foo: 'foo',
+        first: ':first-child:not(:last-child)',
+        nth: data => `:nth-child(${data})`,
+        radio: `input[type="radio"]`,
+        child(data) {
+            if (data) {
+                let args = data
+                    .split(/\s*,\s*/g)
+                    .filter(i => i)
+                    .map(i => `:nth-child(${i})`);
+                return (args.length > 1) ? `:any(${args.join(', ')})` : args[0];
+            }
+            return `:nth-child(n)`;
+        },
+    };
+
+    let samples = [
+        [':first', [
+            `:first-child:not(:last-child)`,
+            `//*[(position() = 1) and (not(position() = last()))]`
+        ]],
+        [':first[b]', [
+            `:first-child:not(:last-child)[b]`,
+            `//*[(position() = 1) and (not(position() = last())) and @b]`
+        ]],
+        ['a :first c', [
+            `a :first-child:not(:last-child) c`,
+            `//a//*[(position() = 1) and (not(position() = last()))]//c`
+        ]],
+        // Should be ignored.
+        ['a :first-child c', [
+            `a :first-child c`,
+            `//a//*[position() = 1]//c`
+        ]],
+        [':child', [
+            `:nth-child(n)`,
+            `//*[position() >= 0]`
+        ]],
+        [':child(1)', [
+            `:nth-child(1)`,
+            `//*[position() = 1]`
+        ]],
+        ['a:child(1, 2, 3):not(.c)', [
+            `a:any(:nth-child(1), :nth-child(2), :nth-child(3)):not(.c)`,
+            `//a[((position() = 1) or (position() = 2) or (position() = 3)) and (not(@class and contains(concat(' ', normalize-space(@class), ' '), ' c ')))]`
+        ]],
+        [`:radio:nth(2)`, [
+            `input[type="radio"]:nth-child(2)`,
+            `//input[(@type = 'radio') and (position() = 2)]`
+        ]],
+        [':foo("(:foo)")', [
+            `foo`,
+            `//foo`
+        ]]
+    ];
+
+    for (let [css, [expectedPostProcess, expectedXPath]] of samples) {
+        it(`should preprocess CSS with custom pseudos '${css}' and convert to correct XPath`, function () {
+            let actualPostProcess = cssToXpath.applyCustomPsuedos(css, pseudos);
+            if (expectedPostProcess) {
+                expect(actualPostProcess).to.equal(expectedPostProcess);
+                expect(cssToXpath(actualPostProcess)).to.equal(expectedXPath);
+                expect(cssToXpath(css, {pseudos})).to.equal(expectedXPath);
+            }
+            else {
+                console.log(`Skip '${css}':\n  ${actualPostProcess}\n  ${cssToXpath(actualPostProcess)}`);
+                this.skip();
+            }
+        });
+    }
+});
