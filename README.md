@@ -25,8 +25,6 @@ E.g. `"  my   <i>string</i> "` is treated as `"my string"`.
 * `:text-end("foo")` Case-insensitive matching of element ending text
 * `:text-end-case("foo")` Case-sensitive `:text-end`
 
-Note: Case-insensitive matching supports character sets within [ISO 8859-15](https://en.wikipedia.org/wiki/ISO/IEC_8859-15#Coverage) and Greek.
-
 #### `:any`
 
 Selectors containing multiple options, any one of which will be matched:
