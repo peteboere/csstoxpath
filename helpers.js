@@ -5,8 +5,8 @@ const self = module.exports = {};
 self.tokenStream = (css, pseudos) => parser(self.applyCustomPsuedos(css, pseudos));
 
 self.decorateToken = token => {
-    let {type, name} = token;
-    let titleCase = s => s.replace(/^\w/, m => m.toUpperCase());
+    const {type, name} = token;
+    const titleCase = s => s.replace(/^\w/, m => m.toUpperCase());
     token[`is${titleCase(type)}`] = true;
     if (name) {
         token[`is${titleCase(type)}${name.split(/-/g).map(titleCase).join('')}`] = true;
@@ -31,36 +31,24 @@ self.translateCaseMap = str => {
 self.arrayUnique = arr => arr.filter((v, i, a) => a.indexOf(v) === i);
 
 self.applyCustomPsuedos = (selector, pseudos) => {
-    if (! pseudos) {
+    const names = pseudos ? Object.keys(pseudos) : [];
+    if (! names.length) {
         return selector;
     }
-    let {string: css, restore} = literalCapture(selector);
-    for (let name in pseudos) {
-        css = css.replace(new RegExp(`:${name}(?:\\(([^)]+)\\)|(?![\\w-]))`, 'g'), (...m) => {
-            let [, data] = m;
-            let handler = pseudos[name];
-            data = (typeof data === 'string') ? restore(data.trim()) : undefined;
-            return (typeof handler === 'function') ? handler(data) : handler;
-        });
-    }
-    return restore(css);
+    const {string, restore} = literalCapture(selector);
+    const patt = new RegExp(`:(${names.join('|')})(?:\\(([^)]+)\\)|(?![\\w-]))`, 'g');
+    return restore(string.replace(patt, (m, name, data) => {
+        const handler = pseudos[name];
+        data = (typeof data === 'string') ? restore(data.trim()) : undefined;
+        return (typeof handler === 'function') ? handler(data) : handler;
+    }));
 };
 
 function literalCapture(string) {
-    let uid = 0;
-    let literals = new Map();
-    string = string.replace(/(["'])(?:\\\1|.)*?\1/g, m => {
-        let key = `@__${uid++}__@`;
-        literals.set(new RegExp(key, 'g'), m);
-        return key;
-    });
+    const literals = [];
     return {
-        string,
-        restore(str) {
-            for (let [patt, value] of literals) {
-                str = str.replace(patt, value);
-            }
-            return str;
-        },
+        literals,
+        string: string.replace(/(["'])(?:\\\1|.)*?\1/g, m => `__S${literals.push(m)-1}__`),
+        restore: str => str.replace(/__S(\d+)__/g, (...m) => literals[m[1]]),
     };
 }

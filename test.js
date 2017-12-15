@@ -115,7 +115,7 @@ const samples = [
      `//*[translate(normalize-space(), 'CAFÉØÖBÄR', 'caféøöbär') = "café føöbär"]`],
     [':text("Μεγάλο λιπαρό ελληνικό γάμο")',
      `//*[translate(normalize-space(), 'ΜΕΓΆΛΟΙΠΑΡΌΗΝΚ', 'μεγάλοιπαρόηνκ') = "μεγάλο λιπαρό ελληνικό γάμο"]`],
-    [':text("עבריתת")', `//*[normalize-space() = "עבריתת"]`],
+    [':text("עברית")', `//*[normalize-space() = "עברית"]`],
 
     ':text-case (case sensitive)',
     [':text-case("foo  BAR ")', `//*[normalize-space() = "foo BAR"]`],
