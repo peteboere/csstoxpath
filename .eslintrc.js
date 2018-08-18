@@ -1,64 +1,126 @@
-module.exports = {
+/*eslint sort-keys: 2*/
+/*eslint object-property-newline: 2*/
+/*eslint quote-props: [2, "consistent"]*/
+
+const self = module.exports = {
     env: {
         es6: true,
         node: true,
     },
-    parserOptions: {
-        ecmaVersion: 8,
-        "ecmaFeatures": {
-            "experimentalObjectRestSpread": true,
-        },
-    },
     extends: 'eslint:recommended',
+    parserOptions: {
+        ecmaVersion: 9,
+    },
     rules: {
-        curly: 2,
-        'no-console': 0,
-        'no-var': 2,
-        'no-tabs': 2,
-        'no-trailing-spaces': 2,
-        'no-dupe-keys': 2,
-        'no-else-return': 2,
-        'no-useless-call': 2,
-        'no-useless-return': 2,
-        'no-unused-expressions': [2, {allowShortCircuit: true}],
-        'no-lonely-if': 2,
+        'array-bracket-spacing': [2, 'never'],
+        'array-element-newline': [2, 'consistent'],
         'arrow-parens': [2, 'as-needed'],
         'arrow-spacing': 2,
-        'object-shorthand': [2, 'properties'],
+        'brace-style': [2, 'stroustrup'],
+        'camelcase': [2, {
+            ignoreDestructuring: true,
+            properties: 'never',
+        }],
+        'comma-dangle': [2, {
+            arrays: 'always-multiline',
+            functions: 'never',
+            objects: 'always-multiline',
+        }],
+        'comma-spacing': [2, {
+            after: true,
+            before: false,
+        }],
+        'curly': 2,
+        'eol-last': [2, 'always'],
+        'eqeqeq': 2,
+        'key-spacing': [2, {
+            afterColon: true,
+            beforeColon: false,
+        }],
+        'keyword-spacing': 2,
+        'linebreak-style': [2, 'unix'],
+        'multiline-comment-style': [2, 'starred-block'],
+        'no-console': 2,
+        'no-dupe-keys': 2,
+        'no-else-return': 2,
         'no-empty': [2, {
             allowEmptyCatch: true,
         }],
-        "no-unused-vars": [2, {
-            // "args": "all",
-            "argsIgnorePattern": "^(req|next)$",
+        'no-lonely-if': 2,
+        'no-multi-spaces': 2,
+        'no-multiple-empty-lines': [2, {
+            max: 2,
+            maxBOF: 1,
+            maxEOF: 1,
         }],
-        'eol-last': [2, 'always'],
-        'no-multiple-empty-lines': [2, {max: 2, maxEOF: 1, maxBOF: 1}],
-        quotes: [2, 'single', {avoidEscape: true, allowTemplateLiterals: true}],
-        'keyword-spacing': 2,
-        'space-before-blocks': 2,
-        'linebreak-style': [2, 'unix'],
+        'no-new-object': 2,
+        'no-template-curly-in-string': 2,
+        'no-tabs': 2,
+        'no-throw-literal': 2,
+        'no-trailing-spaces': 2,
+        'no-unneeded-ternary': 2,
+        'no-unused-expressions': [2, {allowShortCircuit: true}],
+        'no-unused-vars': [2, {
+            args: 'all',
+            argsIgnorePattern: '^(req|res|next)$|^_',
+            varsIgnorePattern: '^_$',
+        }],
+        'no-useless-call': 2,
+        'no-useless-concat': 2,
+        'no-useless-return': 2,
+        'no-var': 2,
+        'object-curly-newline': [2, {consistent: true}],
         'object-curly-spacing': [2, 'never'],
-        'array-bracket-spacing': [2, 'never'],
-        'brace-style': [2, 'stroustrup'],
-        semi: [2, 'always'],
+        'object-shorthand': [2, 'properties'],
+        'operator-linebreak': [2, 'before', {
+            overrides: {
+                ':': 'ignore',
+                '?': 'ignore',
+            },
+        }],
+        'prefer-arrow-callback': 2,
+        'prefer-const': [2, {destructuring: 'all'}],
+        'prefer-destructuring': [2, {
+            array: false,
+            object: true,
+        }],
+        'prefer-object-spread': 2,
         'quote-props': [2, 'as-needed'],
-        'comma-dangle': [2, {
-            objects: 'always-multiline',
-            functions: 'never',
+        'quotes': [2, 'single', {
+            allowTemplateLiterals: true,
+            avoidEscape: true,
         }],
-        'comma-spacing': [2, {
-            before: false,
-            after: true,
-        }],
-        'key-spacing': [2, {
-            beforeColon: false,
-            afterColon: true,
-        }],
+        'semi': [2, 'always'],
+        'space-before-blocks': 2,
         'space-before-function-paren': [2, {
             anonymous: 'always',
             asyncArrow: 'always',
             named: 'never',
         }],
-    }
+        'space-unary-ops': [2, {
+            nonwords: false,
+            overrides: {'!': true},
+            words: true,
+        }],
+        'yoda': 2,
+    },
 };
+
+self.overrides = [{
+    files: ['test.js'],
+    globals: {
+        after: true,
+        api: true,
+        before: true,
+        beforeEach: true,
+        describe: true,
+        expect: true,
+        it: true,
+        models: true,
+        testbot: true,
+    },
+    rules: {
+        'no-unused-expressions': 0,
+        'prefer-arrow-callback': 0,
+    },
+}];

@@ -37,7 +37,7 @@ self.applyCustomPsuedos = (selector, pseudos) => {
     }
     const {string, restore} = literalCapture(selector);
     const patt = new RegExp(`:(${names.join('|')})(?:\\(([^)]+)\\)|(?![\\w-]))`, 'g');
-    return restore(string.replace(patt, (m, name, data) => {
+    return restore(string.replace(patt, (_, name, data) => {
         const handler = pseudos[name];
         data = (typeof data === 'string') ? restore(data.trim()) : undefined;
         return (typeof handler === 'function') ? handler(data) : handler;

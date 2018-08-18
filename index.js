@@ -4,7 +4,7 @@ const {tokenStream, decorateToken, translateCaseMap,
 const self = module.exports = function cssToXPath(css, {pseudos}={}) {
     const streams = tokenStream(css, pseudos);
     const expressions = [];
-    for (let stream of streams) {
+    for (const stream of streams) {
         stream.forEach(token => decorateToken(token));
         if (stream[0].isPseudoRoot) {
             stream.shift();
@@ -34,8 +34,8 @@ self.applyCustomPsuedos = applyCustomPsuedos;
 function xpathExpression(tokens) {
     let xpath = [];
     let filters = [];
-    let commitFilters = () => {
-        let flattened = flattenFilters(filters);
+    const commitFilters = () => {
+        const flattened = flattenFilters(filters);
         if (flattened) {
             xpath.push(`[${flattened}]`);
         }
@@ -43,8 +43,8 @@ function xpathExpression(tokens) {
     };
 
     for (let i = 0; i < tokens.length; i++) {
-        let token = tokens[i];
-        let previous = (i > 0) ? tokens[i-1] : {};
+        const token = tokens[i];
+        const previous = (i > 0) ? tokens[i-1] : {};
 
         if (previous.isNonSiblingAxis && ! token.isTagOrUniversal && ! token.isPseudoComment) {
             xpath.push('*');
@@ -66,7 +66,7 @@ function xpathExpression(tokens) {
             }
         }
         else if (previous.isSibling) {
-            let nodeName = token.isTag ? token.name : '*';
+            const nodeName = token.isTag ? token.name : '*';
             xpath.push(`/following-sibling::${nodeName}`);
             if (token.isTagOrUniversal) {
                 continue;
@@ -94,7 +94,7 @@ function xpathExpression(tokens) {
                 xpath.push(token.name);
                 break;
             default: {
-                let {data} = token;
+                const {data} = token;
                 if (token.isPseudoNot) {
                     filters.push(`not(${subExpression(data, {operator: 'or'})})`);
                 }
@@ -121,9 +121,9 @@ function xpathExpression(tokens) {
 }
 
 function subExpression(tokens, options={}) {
-    let stack = [];
+    const stack = [];
     tokens.forEach(stream => {
-        let filters = [];
+        const filters = [];
         stream.forEach(token => {
             filters.push(...resolveAsFilters(decorateToken(token)));
         });
@@ -133,11 +133,11 @@ function subExpression(tokens, options={}) {
 }
 
 function resolveAsFilters(token) {
-    let elements = [];
+    const elements = [];
     let {name, value, action, data} = token;
 
     if (token.isTag) {
-        let {az, AZ} = translateCaseMap(name);
+        const {az, AZ} = translateCaseMap(name);
         elements.push(`translate(name(), '${az}', '${AZ}') = '${name.toUpperCase()}'`);
     }
     else if (token.isAttribute) {
@@ -193,7 +193,7 @@ function resolveAsFilters(token) {
                 elements.push(`not(${subExpression(data, {operator: 'or'})})`);
                 break;
             case 'nth-child': {
-                let aliases = {
+                const aliases = {
                     odd: '2n+1',
                     even: '2n',
                 };
@@ -204,16 +204,16 @@ function resolveAsFilters(token) {
                     elements.push(`position() = ${data}`);
                     break;
                 }
-                let nthExpr = /^([-+])?(\d+)?n(?:\+(\d+))?$/.exec(data);
+                const nthExpr = /^([-+])?(\d+)?n(?:\+(\d+))?$/.exec(data);
                 if (nthExpr) {
                     let [, sign, nth=0, offset=0] = nthExpr;
                     nth = parseInt(nth, 10);
-                    let reverseNth = sign === '-';
+                    const reverseNth = sign === '-';
                     if (reverseNth) {
                         nth *= -1;
                     }
-                    let expr = [];
-                    let position = 'position()' + (offset ? ` - ${offset}` : '');
+                    const expr = [];
+                    const position = 'position()' + (offset ? ` - ${offset}` : '');
                     expr.push(position);
                     expr.push(reverseNth ? '<=' : '>=');
                     expr.push(0);
@@ -242,14 +242,14 @@ function resolveAsFilters(token) {
 
                 // Case insensitive matching.
                 if (! /case/.test(name)) {
-                    let {az, AZ} = translateCaseMap(searchText);
+                    const {az, AZ} = translateCaseMap(searchText);
                     text = az ? `translate(normalize-space(), '${AZ}', '${az}')` : `normalize-space()`;
                     searchText = searchText.toLowerCase();
                 }
 
                 // Respecting authored quote method.
-                let quoteMatch = /^(['"])([\s\S]*)\1$/.exec(searchText);
-                let quote = quoteMatch ? quoteMatch[1] : '"';
+                const quoteMatch = /^(['"])([\s\S]*)\1$/.exec(searchText);
+                const quote = quoteMatch ? quoteMatch[1] : '"';
                 if (quoteMatch) {
                     searchText = quoteMatch[2].trim();
                 }

@@ -1,4 +1,4 @@
-/* global describe it */
+/*eslint no-console: 0*/
 
 const cssToXpath = require('./index');
 const {expect} = require('chai');
@@ -9,15 +9,15 @@ const samples = [
     ['*', `//*`],
     ['#a', `//*[@id = 'a']`],
     ['.a',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]`,
     ],
     ['.a.b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`,
     ],
 
     'Child axis',
     ['#a > .b:last-child',
-     `//*[@id = 'a']/*[@class and contains(concat(' ', normalize-space(@class), ' '), ' b ') and (position() = last())]`
+     `//*[@id = 'a']/*[@class and contains(concat(' ', normalize-space(@class), ' '), ' b ') and (position() = last())]`,
     ],
 
     'Decendant axis',
@@ -27,24 +27,24 @@ const samples = [
 
     'Direct sibling axis',
     ['.a + b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(translate(name(), 'b', 'B') = 'B') and (position() = 1)]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(translate(name(), 'b', 'B') = 'B') and (position() = 1)]`,
     ],
     ['.a + .b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(position() = 1) and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(position() = 1) and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`,
     ],
     ['.a + b.b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(translate(name(), 'b', 'B') = 'B') and (position() = 1) and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[(translate(name(), 'b', 'B') = 'B') and (position() = 1) and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`,
     ],
 
     'Indirect sibling axis',
     ['.a ~ b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::b`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::b`,
     ],
     ['.a ~ .b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[@class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::*[@class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`,
     ],
     ['.a ~ b.b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::b[@class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]/following-sibling::b[@class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`,
     ],
 
     'Attributes',
@@ -59,13 +59,13 @@ const samples = [
     ':first-child',
     [':first-child', `//*[position() = 1]`],
     ['.a:first-child',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and (position() = 1)]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and (position() = 1)]`,
     ],
 
     ':last-child',
     [':last-child', `//*[position() = last()]`],
     ['.a:last-child',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and (position() = last())]`
+     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and (position() = last())]`,
     ],
 
     ':nth-child',
@@ -166,12 +166,12 @@ const samples = [
     ['a:comment(1):text-case("Foo")', `//a/comment()[1][normalize-space() = "Foo"]`],
     ['a:comment:text-contains("Foo")',
      `//a/comment()[contains(translate(normalize-space(), 'FO', 'fo'), "foo")]`],
-    ['a:comment:text-contains-case("Foo")', `//a/comment()[contains(normalize-space(), "Foo")]`]
+    ['a:comment:text-contains-case("Foo")', `//a/comment()[contains(normalize-space(), "Foo")]`],
 ];
 
-let groups = {};
+const groups = {};
 let activeGroup;
-for (let item of samples) {
+for (const item of samples) {
     if (typeof item === 'string') {
         activeGroup = item;
         groups[activeGroup] = [];
@@ -180,11 +180,11 @@ for (let item of samples) {
     groups[activeGroup].push(item);
 }
 
-for (let name in groups) {
+for (const name in groups) {
     describe(name, function () {
-        for (let [css, xpath] of groups[name]) {
+        for (const [css, xpath] of groups[name]) {
             it(`should convert '${css}'`, function () {
-                let converted = cssToXpath(css);
+                const converted = cssToXpath(css);
                 if (xpath) {
                     expect(converted).to.equal(xpath);
                 }
@@ -203,11 +203,11 @@ describe('Sub expressions', function () {
         ['.b', `@class and contains(concat(' ', normalize-space(@class), ' '), ' b ')`],
         ['a.b', `(translate(name(), 'a', 'A') = 'A') and @class and contains(concat(' ', normalize-space(@class), ' '), ' b ')`],
         ['a, b', `(translate(name(), 'a', 'A') = 'A') or (translate(name(), 'b', 'B') = 'B')`],
-        [':text("foo")', `translate(normalize-space(), 'FO', 'fo') = "foo"`]
+        [':text("foo")', `translate(normalize-space(), 'FO', 'fo') = "foo"`],
     ];
-    for (let [css, xpath] of samples) {
+    for (const [css, xpath] of samples) {
         it(`should convert sub-expression '${css}'`, function () {
-            let converted = cssToXpath.subExpression(css);
+            const converted = cssToXpath.subExpression(css);
             if (xpath) {
                 expect(converted).to.equal(xpath);
             }
@@ -220,7 +220,7 @@ describe('Sub expressions', function () {
 });
 
 describe('Unsupported selectors', function () {
-    let unsupported = [
+    const unsupported = [
         ':nth-last-child(1)',
         ':nth-of-type',
         ':nth-last-of-type',
@@ -230,9 +230,9 @@ describe('Unsupported selectors', function () {
         ':disabled',
         ':enabled',
         ':required',
-        'a:lang(en)'
+        'a:lang(en)',
     ];
-    for (let css of unsupported) {
+    for (const css of unsupported) {
         it(`should error for unsupported selector '${css}'`, function () {
             expect(() => cssToXpath(css)).to.throw(Error);
         });
@@ -240,14 +240,14 @@ describe('Unsupported selectors', function () {
 });
 
 describe('Author pseudo preprocessing', function () {
-    let pseudos = {
+    const pseudos = {
         foo: 'foo',
         first: ':first-child:not(:last-child)',
         nth: data => `:nth-child(${data})`,
         radio: `input[type="radio"]`,
         child(data) {
             if (data) {
-                let args = data
+                const args = data
                     .split(/\s*,\s*/g)
                     .filter(i => i)
                     .map(i => `:nth-child(${i})`);
@@ -257,49 +257,49 @@ describe('Author pseudo preprocessing', function () {
         },
     };
 
-    let samples = [
+    const samples = [
         [':first', [
             `:first-child:not(:last-child)`,
-            `//*[(position() = 1) and (not(position() = last()))]`
+            `//*[(position() = 1) and (not(position() = last()))]`,
         ]],
         [':first[b]', [
             `:first-child:not(:last-child)[b]`,
-            `//*[(position() = 1) and (not(position() = last())) and @b]`
+            `//*[(position() = 1) and (not(position() = last())) and @b]`,
         ]],
         ['a :first c', [
             `a :first-child:not(:last-child) c`,
-            `//a//*[(position() = 1) and (not(position() = last()))]//c`
+            `//a//*[(position() = 1) and (not(position() = last()))]//c`,
         ]],
         // Should be ignored.
         ['a :first-child c', [
             `a :first-child c`,
-            `//a//*[position() = 1]//c`
+            `//a//*[position() = 1]//c`,
         ]],
         [':child', [
             `:nth-child(n)`,
-            `//*[position() >= 0]`
+            `//*[position() >= 0]`,
         ]],
         [':child(1)', [
             `:nth-child(1)`,
-            `//*[position() = 1]`
+            `//*[position() = 1]`,
         ]],
         ['a:child(1, 2, 3):not(.c)', [
             `a:any(:nth-child(1), :nth-child(2), :nth-child(3)):not(.c)`,
-            `//a[((position() = 1) or (position() = 2) or (position() = 3)) and (not(@class and contains(concat(' ', normalize-space(@class), ' '), ' c ')))]`
+            `//a[((position() = 1) or (position() = 2) or (position() = 3)) and (not(@class and contains(concat(' ', normalize-space(@class), ' '), ' c ')))]`,
         ]],
         [`:radio:nth(2)`, [
             `input[type="radio"]:nth-child(2)`,
-            `//input[(@type = 'radio') and (position() = 2)]`
+            `//input[(@type = 'radio') and (position() = 2)]`,
         ]],
         [':foo("(:foo)")', [
             `foo`,
-            `//foo`
-        ]]
+            `//foo`,
+        ]],
     ];
 
-    for (let [css, [expectedPostProcess, expectedXPath]] of samples) {
+    for (const [css, [expectedPostProcess, expectedXPath]] of samples) {
         it(`should preprocess CSS with custom pseudos '${css}' and convert to correct XPath`, function () {
-            let actualPostProcess = cssToXpath.applyCustomPsuedos(css, pseudos);
+            const actualPostProcess = cssToXpath.applyCustomPsuedos(css, pseudos);
             if (expectedPostProcess) {
                 expect(actualPostProcess).to.equal(expectedPostProcess);
                 expect(cssToXpath(actualPostProcess)).to.equal(expectedXPath);
