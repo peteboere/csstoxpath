@@ -1,9 +1,12 @@
-const {tokenStream, decorateToken, translateCaseMap,
-    arrayUnique, applyCustomPsuedos} = require('./helpers');
+'use strict';
+const {tokenStreams, decorateToken, translateCaseMap,
+    arrayFilterUnique, applyCustomPsuedos} = require('./helpers');
 
 const self = module.exports = function cssToXPath(css, {pseudos}={}) {
-    const streams = tokenStream(css, pseudos);
+
+    const streams = tokenStreams(css, pseudos);
     const expressions = [];
+
     for (const stream of streams) {
         stream.forEach(token => decorateToken(token));
         if (stream[0].isPseudoRoot) {
@@ -14,26 +17,49 @@ const self = module.exports = function cssToXPath(css, {pseudos}={}) {
             stream.unshift({type: 'descendant'});
         }
         decorateToken(stream[0]);
+
+        let tagContext;
+        for (const item of stream) {
+            if (item.isTag) {
+                tagContext = item.name;
+            }
+            else if (item.isAxis) {
+                tagContext = null;
+            }
+            else if (tagContext) {
+                item.tagContext = tagContext;
+            }
+            if (item.isPseudo && item.name.endsWith('-of-type') && ! item.tagContext) {
+                throw new SyntaxError('*-of-type pseudos require a tag context');
+            }
+        }
+
         expressions.push(xpathExpression(stream));
     }
-    return (expressions.length > 1) ? `(${expressions.join('|')})` : expressions[0];
+
+    return expressions.length > 1
+        ? `(${expressions.join('|')})`
+        : expressions[0];
 };
 
 self.subExpression = (css, {pseudos}={}) => {
-    const streams = tokenStream(css, pseudos)
+    const streams = tokenStreams(css, pseudos)
         .map(stream => {
             return stream
                 .map(token => decorateToken(token))
                 .filter(token => token.isPseudo || token.isAttribute || token.isTag);
         });
+
     return subExpression(streams, {operator: 'or'});
 };
 
 self.applyCustomPsuedos = applyCustomPsuedos;
 
 function xpathExpression(tokens) {
+
     let xpath = [];
     let filters = [];
+
     const commitFilters = () => {
         const flattened = flattenFilters(filters);
         if (flattened) {
@@ -43,8 +69,12 @@ function xpathExpression(tokens) {
     };
 
     for (let i = 0; i < tokens.length; i++) {
+
         const token = tokens[i];
-        const previous = (i > 0) ? tokens[i-1] : {};
+
+        const previous = i > 0
+            ? tokens[i-1]
+            : {};
 
         if (previous.isNonSiblingAxis && ! token.isTagOrUniversal && ! token.isPseudoComment) {
             xpath.push('*');
@@ -108,6 +138,19 @@ function xpathExpression(tokens) {
                     }
                     xpath.push('comment()' + (data ? `[${data}]` : ''));
                 }
+                else if (
+                    token.isPseudoNthChild
+                    || token.isPseudoFirstChild
+                    || token.isPseudoLastChild
+                    || token.isPseudoOnlyChild
+                ) {
+                    const tokenFilters = resolveAsFilters(token);
+                    if (token.tagContext) {
+                        xpath.splice(-1, 1, '*');
+                        tokenFilters.unshift(`name() = '${token.tagContext}'`);
+                    }
+                    filters.push(...tokenFilters);
+                }
                 else {
                     filters.push(...resolveAsFilters(token));
                 }
@@ -117,6 +160,7 @@ function xpathExpression(tokens) {
     }
 
     commitFilters();
+
     return xpath.join('');
 }
 
@@ -129,6 +173,7 @@ function subExpression(tokens, options={}) {
         });
         stack.push(flattenFilters(filters));
     });
+
     return flattenFilters(stack, options);
 }
 
@@ -183,16 +228,19 @@ function resolveAsFilters(token) {
             case 'childless':
                 elements.push(`not(*) and not(string-length(normalize-space()))`);
                 break;
-            case 'first-child':
+            case 'first-child': // fallthrough
+            case 'first-of-type':
                 elements.push(`position() = 1`);
                 break;
-            case 'last-child':
+            case 'last-child': // fallthrough
+            case 'last-of-type':
                 elements.push(`position() = last()`);
                 break;
             case 'not':
                 elements.push(`not(${subExpression(data, {operator: 'or'})})`);
                 break;
-            case 'nth-child': {
+            case 'nth-child': // fallthrough
+            case 'nth-of-type': {
                 const aliases = {
                     odd: '2n+1',
                     even: '2n',
@@ -276,15 +324,19 @@ function resolveAsFilters(token) {
     else {
         throw new SyntaxError(`Unsupported token type '${token.type}'.`);
     }
+
     return elements;
 }
 
 function flattenFilters(filters, {operator='and'}={}) {
-    filters = arrayUnique(filters.map(filter => {
-        if ((filters.length > 1) && /[=<>]|\b(and|or)\b/i.test(filter)) {
-            return `(${filter})`;
-        }
-        return filter;
-    }));
-    return filters.length ? filters.join(` ${operator} `) : '';
+
+    return filters
+        .map(filter => {
+            if ((filters.length > 1) && /[=<>]|\b(and|or)\b/i.test(filter)) {
+                return `(${filter})`;
+            }
+            return filter;
+        })
+        .filter(arrayFilterUnique)
+        .join(` ${operator} `);
 }

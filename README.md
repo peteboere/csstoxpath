@@ -43,6 +43,14 @@ Note: Can be combined with `:text` to match based on comment text content. E.g. 
 As `:empty` but ignoring whitespace.
 
 
+## Aliased pseudos
+
+* `:first` is aliased to `:first-child`
+* `:last` is aliased to `:last-child`
+* `:child` is aliased to `:nth-child`
+* `:contains` is aliased to `:text-contains`
+
+
 ## Author pseudos
 
 Authored pseudos can serve as aliases to help simplify selector chains:
@@ -50,28 +58,37 @@ Authored pseudos can serve as aliases to help simplify selector chains:
 ```js
 /*
  * If the `pseudos` option is set the CSS expression is
- * preprocessed before generating the XPath expression.
- * In this case as follows:
+ * preprocessed before generating the XPath expression:
  *
- * before  :radio:nth(2)
- * after   input[type="radio"]:nth-child(2)
+ * :radio
+ * => input[type="radio"]
+ *
+ * :element-1(Hello)
+ * => element:child(1):contains("Hello")
  */
 const cssToXpath = require('csstoxpath');
-const xpathExpr = cssToXpath(':radio:nth(2)', {
+const xpathExpr = cssToXpath(':radio, :element-1(Hello)', {
     pseudos: {
         radio: 'input[type="radio"]',
-        nth: data => `:nth-child(${data})`,
+        [/element-(\d+)/]: (data, m) => `element:child(${m[1]}):contains("${data}")`,
     }
 });
 ```
 
-## Unsupported psuedos
+## Limitations
 
-The following may be supported at a later date:
+The following pseudos are partially supported as they require a tag context:
+
+* `:nth-of-type`
+* `:first-of-type`
+* `:last-of-type`
+
+The following pseudos are currently unsupported:
 
 * `:nth-last-child`
+* `:nth-last-of-type`
 
-Part-dynamic pseudos are excluded as they can only be partially supported by attribute matching:
+Dynamic pseudos are excluded as they can only be partially supported by attribute matching:
 
 * `:checked`
 * `:disabled`
@@ -81,6 +98,5 @@ Part-dynamic pseudos are excluded as they can only be partially supported by att
 
 The following cannot be implemented in XPath 1.0:
 
-* `:*-of-type`
 * States: `:hover`, `:focus`, `:active`, `:visited`, `:target` etc.
 * Elements: `::before`, `::after`, `::first-letter` etc.

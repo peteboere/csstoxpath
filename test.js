@@ -1,24 +1,20 @@
+'use strict';
 /*eslint no-console: 0*/
 
 const cssToXpath = require('./index');
 const {expect} = require('chai');
 
 const samples = [
+
     'Simple',
     ['a', `//a`],
     ['*', `//*`],
     ['#a', `//*[@id = 'a']`],
-    ['.a',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]`,
-    ],
-    ['.a.b',
-     `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`,
-    ],
+    ['.a', `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ')]`],
+    ['.a.b', `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`],
 
     'Child axis',
-    ['#a > .b:last-child',
-     `//*[@id = 'a']/*[@class and contains(concat(' ', normalize-space(@class), ' '), ' b ') and (position() = last())]`,
-    ],
+    ['#a > .b:last-child', `//*[@id = 'a']/*[@class and contains(concat(' ', normalize-space(@class), ' '), ' b ') and (position() = last())]`],
 
     'Decendant axis',
     ['a .b', `//a//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' b ')]`],
@@ -57,18 +53,26 @@ const samples = [
     ['a[b!="c"]', `//a[not(@b) or @b != 'c']`],
 
     ':first-child',
+    [':first', `//*[position() = 1]`],
     [':first-child', `//*[position() = 1]`],
     ['.a:first-child',
      `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and (position() = 1)]`,
     ],
 
+    // first-child with tag context.
+    ['div:first-child', `//*[(name() = 'div') and (position() = 1)]`],
+
     ':last-child',
+    [':last', `//*[position() = last()]`],
     [':last-child', `//*[position() = last()]`],
     ['.a:last-child',
      `//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' a ') and (position() = last())]`,
     ],
+    // With tag context.
+    ['div[foo]:last-child(4)', `//*[@foo and (name() = 'div') and (position() = last())]`],
 
     ':nth-child',
+    [':child(1n)', `//*[position() >= 0]`],
     [':nth-child(1n)', `//*[position() >= 0]`],
     [':nth-child(1n+2)', `//*[position() - 2 >= 0]`],
     [':nth-child(2n)', `//*[position() >= 0 and (position()) mod 2 = 0]`],
@@ -82,6 +86,17 @@ const samples = [
     [':nth-child(0)', `//*[position() = 0]`],
     [':nth-child(4)', `//*[position() = 4]`],
     [':nth-child(-2n+3)', `//*[position() - 3 <= 0 and (position() - 3) mod -2 = 0]`],
+     // With tag context.
+    ['div[foo]:nth-child(4)', `//*[@foo and (name() = 'div') and (position() = 4)]`],
+
+    ':nth-of-type',
+    ['div:nth-of-type(4)', `//div[position() = 4]`],
+
+    ':last-of-type',
+    ['div:last-of-type', `//div[position() = last()]`],
+
+    ':first-of-type',
+    ['div:first-of-type', `//div[position() = 1]`],
 
     ':root',
     [':root', `/*`],
@@ -93,6 +108,8 @@ const samples = [
 
     ':only-child',
     [':only-child', `//*[last() = 1]`],
+     // With tag context.
+    ['div:only-child', `//*[(name() = 'div') and (last() = 1)]`],
 
     ':empty',
     [':empty', `//*[not(*) and not(string-length())]`],
@@ -121,6 +138,8 @@ const samples = [
     [':text-case("foo  BAR ")', `//*[normalize-space() = "foo BAR"]`],
 
     ':text-contains',
+    [':contains("foo  bar ")',
+     `//*[contains(translate(normalize-space(), 'FOBAR', 'fobar'), "foo bar")]`],
     [':text-contains("foo  bar ")',
      `//*[contains(translate(normalize-space(), 'FOBAR', 'fobar'), "foo bar")]`],
 
@@ -222,9 +241,7 @@ describe('Sub expressions', function () {
 describe('Unsupported selectors', function () {
     const unsupported = [
         ':nth-last-child(1)',
-        ':nth-of-type',
         ':nth-last-of-type',
-        ':last-of-type',
         ':only-of-type',
         ':checked',
         ':disabled',
@@ -239,12 +256,27 @@ describe('Unsupported selectors', function () {
     }
 });
 
+describe('Unspecified tag context *-of-type psuedos', function () {
+    const unsupported = [
+        ':nth-of-type',
+        ':first-of-type',
+        ':last-of-type',
+    ];
+    for (const css of unsupported) {
+        it(`should error for unsupported selector '${css}'`, function () {
+            expect(() => cssToXpath(css)).to.throw(Error, /-of-type pseudos require a tag context/);
+        });
+    }
+});
+
 describe('Author pseudo preprocessing', function () {
+
     const pseudos = {
-        foo: 'foo',
+
+        // First alias can be overriden.
         first: ':first-child:not(:last-child)',
-        nth: data => `:nth-child(${data})`,
-        radio: `input[type="radio"]`,
+
+        // Child alias can be overriden.
         child(data) {
             if (data) {
                 const args = data
@@ -254,6 +286,31 @@ describe('Author pseudo preprocessing', function () {
                 return (args.length > 1) ? `:any(${args.join(', ')})` : args[0];
             }
             return `:nth-child(n)`;
+        },
+
+        foo: 'foo',
+        nth: data => `:nth-child(${data})`,
+        radio: `input[type="radio"]`,
+
+        // Regexes.
+        [/custom-(?<position>\d+)(-(?<type>heading|link))?/](data, matches) {
+
+            let selector = `element:nth-of-type(${matches.position})`;
+
+            switch (matches.type) {
+                case 'heading':
+                    selector += ' > h1';
+                    break;
+                case 'link':
+                    selector += ' > a';
+                    break;
+            }
+
+            if (data) {
+                selector += `:contains(${data})`;
+            }
+
+            return selector;
         },
     };
 
@@ -270,7 +327,7 @@ describe('Author pseudo preprocessing', function () {
             `a :first-child:not(:last-child) c`,
             `//a//*[(position() = 1) and (not(position() = last()))]//c`,
         ]],
-        // Should be ignored.
+        // Should passthrough unaffected.
         ['a :first-child c', [
             `a :first-child c`,
             `//a//*[position() = 1]//c`,
@@ -289,11 +346,19 @@ describe('Author pseudo preprocessing', function () {
         ]],
         [`:radio:nth(2)`, [
             `input[type="radio"]:nth-child(2)`,
-            `//input[(@type = 'radio') and (position() = 2)]`,
+            `//*[(@type = 'radio') and (name() = 'input') and (position() = 2)]`,
         ]],
         [':foo("(:foo)")', [
             `foo`,
             `//foo`,
+        ]],
+        [':custom-1-heading', [
+            'element:nth-of-type(1) > h1',
+            `//element[position() = 1]/h1`,
+        ]],
+        [':custom-2-link(Some text)', [
+            'element:nth-of-type(2) > a:contains(Some text)',
+            `//element[position() = 2]/a[contains(translate(normalize-space(), 'SOMETX', 'sometx'), "some text")]`,
         ]],
     ];
 
