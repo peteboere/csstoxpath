@@ -78,12 +78,24 @@ self.applyCustomPsuedos = (selector, pseudos) => {
         const patt = new RegExp(`:(${names.join('|')})${dataSubPatt}`, 'g');
         string = string
             .replace(patt, (_, name, data) => {
+
                 const handler = pseudos[name];
+                const handlerIsFn = typeof handler === 'function';
+
                 data = typeof data === 'string'
-                    ? restore(data.trim())
+                    ? data.trim()
                     : undefined;
-                return typeof handler === 'function'
-                    ? handler(data)
+
+                let args = [];
+                if (data) {
+                    args = (handlerIsFn && handler.length > 1
+                        ? data.split(/\s*,\s*/)
+                        : [data])
+                        .map(restore);
+                }
+
+                return handlerIsFn
+                    ? handler(...args)
                     : handler;
             });
     }
@@ -134,6 +146,21 @@ self.applyCustomPsuedos = (selector, pseudos) => {
     }
 
     return restore(string);
+};
+
+self.quotedString = str => {
+
+    const single = "'";
+    const double = '"';
+    const strip = /^["']|["']$/g;
+    if (
+        (str.startsWith(single) && str.endsWith(single))
+        || (str.startsWith(double) && str.endsWith(double))
+    ) {
+        str = str.replace(strip, '');
+    }
+
+    return `"${str.replace(/"/g, '&quot;')}"`;
 };
 
 const literalCapture = string => {

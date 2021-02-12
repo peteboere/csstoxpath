@@ -271,6 +271,8 @@ describe('Unspecified tag context *-of-type psuedos', function () {
 
 describe('Author pseudo preprocessing', function () {
 
+    const {quotedString} = cssToXpath;
+
     const pseudos = {
 
         // First alias can be overriden.
@@ -291,6 +293,10 @@ describe('Author pseudo preprocessing', function () {
         foo: 'foo',
         nth: data => `:nth-child(${data})`,
         radio: `input[type="radio"]`,
+
+        // Parse as multiple arguments if handler specifies them.
+        link: (text, href) => `a${href ? `[href="${href}"]` : ''}:text(${quotedString(text)})`,
+        link2: text => `a:text(${quotedString(text)})`,
 
         // Regexes.
         [/custom-(?<position>\d+)(-(?<type>heading|link))?/](data, matches) {
@@ -351,6 +357,18 @@ describe('Author pseudo preprocessing', function () {
         [':foo("(:foo)")', [
             `foo`,
             `//foo`,
+        ]],
+        [':link(Some text, https://link.com)', [
+            `a[href="https://link.com"]:text("Some text")`,
+            `//a[(@href = 'https://link.com') and (translate(normalize-space(), 'SOMETX', 'sometx') = "some text")]`,
+        ]],
+        [':link("Some, text, with, commas", https://link.com)', [
+            `a[href="https://link.com"]:text("Some, text, with, commas")`,
+            `//a[(@href = 'https://link.com') and (translate(normalize-space(), 'SOMETXWIHCA', 'sometxwihca') = "some, text, with, commas")]`,
+        ]],
+        [':link2(Some text, but no link)', [
+            `a:text("Some text, but no link")`,
+            `//a[translate(normalize-space(), 'SOMETXBUNLIK', 'sometxbunlik') = "some text, but no link"]`,
         ]],
         [':custom-1-heading', [
             'element:nth-of-type(1) > h1',

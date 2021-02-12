@@ -1,6 +1,6 @@
 'use strict';
 const {tokenStreams, decorateToken, translateCaseMap,
-    arrayFilterUnique, applyCustomPsuedos} = require('./helpers');
+    arrayFilterUnique, applyCustomPsuedos, quotedString} = require('./helpers');
 
 const self = module.exports = function cssToXPath(css, {pseudos}={}) {
 
@@ -53,7 +53,10 @@ self.subExpression = (css, {pseudos}={}) => {
     return subExpression(streams, {operator: 'or'});
 };
 
-self.applyCustomPsuedos = applyCustomPsuedos;
+Object.assign(self, {
+    applyCustomPsuedos,
+    quotedString,
+});
 
 function xpathExpression(tokens) {
 
