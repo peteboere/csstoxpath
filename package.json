@@ -21,7 +21,7 @@
     "node": ">=8"
   },
   "dependencies": {
-    "css-what": "~3.3.0"
+    "css-what": "~5.0.1"
   },
   "devDependencies": {
     "chai": "~4.2.0",
