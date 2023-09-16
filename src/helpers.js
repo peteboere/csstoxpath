@@ -1,12 +1,9 @@
-'use strict';
-const CSSwhat = require('css-what');
+import * as CSSwhat from 'css-what';
 
-const self = module.exports = {};
-
-self.tokenStreams = (css, pseudos) => {
+export function tokenStreams(css, pseudos) {
 
     const streams = CSSwhat
-        .parse(self.applyCustomPsuedos(css, pseudos));
+        .parse(applyCustomPsuedos(css, pseudos));
 
     const pseudoAliases = {
         first: 'first-child',
@@ -24,40 +21,50 @@ self.tokenStreams = (css, pseudos) => {
     }
 
     return streams;
-};
+}
 
-self.decorateToken = token => {
+export function decorateToken(token) {
+
     const {type, name} = token;
     token[`is${titleCase(type)}`] = true;
+
     if (name) {
         token[`is${titleCase(type)}${name.split(/-/g).map(titleCase).join('')}`] = true;
     }
+
     token.isSiblingAxis = /^(sibling|adjacent)$/.test(type);
     token.isNonSiblingAxis = /^(descendant|child)$/.test(type);
     token.isAxis = token.isSiblingAxis || token.isNonSiblingAxis;
     token.isTagOrUniversal = /^(tag|universal)$/.test(type);
 
     return token;
-};
+}
 
-self.translateCaseMap = str => {
+export function translateCaseMap(str) {
+
     const az = str
         .toLowerCase()
         // ISO/IEC 8859-15 (+ greek) lowercase letters.
         .replace(/[^a-z\u0161\u017E\u0153\u00E0-\u00FF\u03AC-\u03CE]/g, '')
         .split('')
-        .filter(self.arrayFilterUnique)
+        .filter(arrayFilterUnique)
         .join('');
 
     return {
         az,
         AZ: az.toUpperCase(),
     };
-};
+}
 
-self.arrayFilterUnique = (v, i, a) => a.indexOf(v) === i;
+export function arrayFilterUnique(v, i, a) {
+    return a.indexOf(v) === i;
+}
 
-self.applyCustomPsuedos = (selector, pseudos) => {
+/**
+ * @param {string} selector
+ * @param {import('./_.d.ts').PseudoDefinitions} pseudos
+ */
+export function applyCustomPsuedos(selector, pseudos) {
 
     const keys = pseudos
         ? Object.keys(pseudos)
@@ -146,13 +153,14 @@ self.applyCustomPsuedos = (selector, pseudos) => {
     }
 
     return restore(string);
-};
+}
 
-self.quotedString = str => {
+export function quotedString(str) {
 
     const single = "'";
     const double = '"';
     const strip = /^["']|["']$/g;
+
     if (
         (str.startsWith(single) && str.endsWith(single))
         || (str.startsWith(double) && str.endsWith(double))
@@ -160,11 +168,13 @@ self.quotedString = str => {
         str = str.replace(strip, '');
     }
 
-    return `"${str.replace(/"/g, '&quot;')}"`;
-};
+    return `"${str.replaceAll('"', '&quot;')}"`;
+}
 
-const literalCapture = string => {
+function literalCapture(string) {
+
     const literals = [];
+
     return {
         literals,
         string: string
@@ -172,6 +182,9 @@ const literalCapture = string => {
         restore: str => str
             .replace(/__S(\d+)__/g, (...m) => literals[m[1]]),
     };
-};
+}
 
-const titleCase = string => string.replace(/^\w/, m => m.toUpperCase());
+function titleCase(string) {
+
+    return string.replace(/^\w/, m => m.toUpperCase());
+}

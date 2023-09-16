@@ -1,8 +1,7 @@
-'use strict';
-/*eslint no-console: 0*/
-
-const cssToXpath = require('./index');
-const {expect} = require('chai');
+/* eslint no-console: 0 */
+import {describe, it} from 'node:test';
+import {strict as assert} from 'node:assert';
+import {cssToXPath} from '../index.js';
 
 const samples = [
 
@@ -189,7 +188,9 @@ const samples = [
 ];
 
 const groups = {};
+
 let activeGroup;
+
 for (const item of samples) {
     if (typeof item === 'string') {
         activeGroup = item;
@@ -200,23 +201,20 @@ for (const item of samples) {
 }
 
 for (const name in groups) {
-    describe(name, function () {
+
+    describe(name, () => {
+
         for (const [css, xpath] of groups[name]) {
-            it(`should convert '${css}'`, function () {
-                const converted = cssToXpath(css);
-                if (xpath) {
-                    expect(converted).to.equal(xpath);
-                }
-                else {
-                    console.log(`Skip: ${css} => ${converted}`);
-                    this.skip();
-                }
+
+            it(`should convert '${css}'`, () => {
+                const converted = cssToXPath(css);
+                assert.equal(converted, xpath);
             });
         }
     });
 }
 
-describe('Sub expressions', function () {
+describe('Sub expressions', () => {
     const samples = [
         ['a', `translate(name(), 'a', 'A') = 'A'`],
         ['.b', `@class and contains(concat(' ', normalize-space(@class), ' '), ' b ')`],
@@ -225,20 +223,14 @@ describe('Sub expressions', function () {
         [':text("foo")', `translate(normalize-space(), 'FO', 'fo') = "foo"`],
     ];
     for (const [css, xpath] of samples) {
-        it(`should convert sub-expression '${css}'`, function () {
-            const converted = cssToXpath.subExpression(css);
-            if (xpath) {
-                expect(converted).to.equal(xpath);
-            }
-            else {
-                console.log(`Skip: ${css} => ${converted}`);
-                this.skip();
-            }
+        it(`should convert sub-expression '${css}'`, () => {
+            const converted = cssToXPath.subExpression(css);
+            assert.equal(converted, xpath);
         });
     }
 });
 
-describe('Unsupported selectors', function () {
+describe('Unsupported selectors', () => {
     const unsupported = [
         ':nth-last-child(1)',
         ':nth-last-of-type',
@@ -250,28 +242,34 @@ describe('Unsupported selectors', function () {
         'a:lang(en)',
     ];
     for (const css of unsupported) {
-        it(`should error for unsupported selector '${css}'`, function () {
-            expect(() => cssToXpath(css)).to.throw(Error);
+        it(`should error for unsupported selector '${css}'`, () => {
+            assert.throws(() => cssToXPath(css), {
+                name: 'SyntaxError',
+                message: /Unsupported pseudo selector |-of-type pseudos require a tag context/,
+            });
         });
     }
 });
 
-describe('Unspecified tag context *-of-type psuedos', function () {
+describe('Unspecified tag context *-of-type psuedos', () => {
     const unsupported = [
         ':nth-of-type',
         ':first-of-type',
         ':last-of-type',
     ];
     for (const css of unsupported) {
-        it(`should error for unsupported selector '${css}'`, function () {
-            expect(() => cssToXpath(css)).to.throw(Error, /-of-type pseudos require a tag context/);
+        it(`should error for unsupported selector '${css}'`, () => {
+            assert.throws(() => cssToXPath(css), {
+                name: 'SyntaxError',
+                message: '*-of-type pseudos require a tag context',
+            });
         });
     }
 });
 
-describe('Author pseudo preprocessing', function () {
+describe('Author pseudo preprocessing', () => {
 
-    const {quotedString} = cssToXpath;
+    const {quotedString} = cssToXPath;
 
     const pseudos = {
 
@@ -299,7 +297,7 @@ describe('Author pseudo preprocessing', function () {
         link2: text => `a:text(${quotedString(text)})`,
 
         // Regexes.
-        [/custom-(?<position>\d+)(-(?<type>heading|link))?/](data, matches) {
+        [String(/custom-(?<position>\d+)(-(?<type>heading|link))?/)](data, matches) {
 
             let selector = `element:nth-of-type(${matches.position})`;
 
@@ -320,6 +318,7 @@ describe('Author pseudo preprocessing', function () {
         },
     };
 
+    /** @type {[string, string[]][]} */
     const samples = [
         [':first', [
             `:first-child:not(:last-child)`,
@@ -381,17 +380,12 @@ describe('Author pseudo preprocessing', function () {
     ];
 
     for (const [css, [expectedPostProcess, expectedXPath]] of samples) {
-        it(`should preprocess CSS with custom pseudos '${css}' and convert to correct XPath`, function () {
-            const actualPostProcess = cssToXpath.applyCustomPsuedos(css, pseudos);
-            if (expectedPostProcess) {
-                expect(actualPostProcess).to.equal(expectedPostProcess);
-                expect(cssToXpath(actualPostProcess)).to.equal(expectedXPath);
-                expect(cssToXpath(css, {pseudos})).to.equal(expectedXPath);
-            }
-            else {
-                console.log(`Skip '${css}':\n  ${actualPostProcess}\n  ${cssToXpath(actualPostProcess)}`);
-                this.skip();
-            }
+        it(`should preprocess CSS with custom pseudos '${css}' and convert to correct XPath`, () => {
+            const actualPostProcess = cssToXPath.applyCustomPsuedos(css, pseudos);
+
+            assert.equal(actualPostProcess, expectedPostProcess);
+            assert.equal(cssToXPath(actualPostProcess), expectedXPath);
+            assert.equal(cssToXPath(css, {pseudos}), expectedXPath);
         });
     }
 });

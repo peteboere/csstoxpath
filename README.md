@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/peteboere/csstoxpath.svg?branch=master)](https://travis-ci.org/peteboere/csstoxpath)
-
 # CSS to XPath
 
 Converts most CSS 2.1/3 selectors (see exclusions below) to equivalent XPath 1.0 expression.
